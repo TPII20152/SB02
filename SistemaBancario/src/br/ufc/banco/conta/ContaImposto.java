@@ -8,6 +8,12 @@ public class ContaImposto extends ContaAbstrata {
 	}
 
 	public void debitar(double valor) {
-		this.saldo = this.saldo - (valor + (valor * 0.001));
+		double novoValor = this.saldo - (valor + (valor * 0.001));
+		if(novoValor >= 0){
+			this.saldo = novoValor;
+		}
+		else{
+			System.out.println("Saldo insuficiente!");
+		}
 	}
 }
