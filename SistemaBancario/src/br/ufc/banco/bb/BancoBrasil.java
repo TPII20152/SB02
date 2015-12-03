@@ -6,6 +6,7 @@ import br.ufc.banco.conta.ContaAbstrata;
 import br.ufc.banco.conta.ContaEspecial;
 import br.ufc.banco.conta.ContaPoupanca;
 import br.ufc.banco.conta.excecoes.SIException;
+import br.ufc.banco.dados.ArrayContas;
 import br.ufc.banco.dados.IRepositorioContas;
 import br.ufc.banco.dados.excecoes.CEException;
 import br.ufc.banco.dados.excecoes.CIException;
@@ -121,5 +122,8 @@ public class BancoBrasil {
 			}
 		}
 		return saldo;
+	}
+	public ArrayContas obterTodasContas(){
+		return (ArrayContas) repositorio;
 	}
 }

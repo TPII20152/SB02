@@ -1,5 +1,7 @@
 package br.ufc.banco.bb;
 
+import java.io.File;
+import java.util.List;
 import java.util.Scanner;
 
 import br.ufc.banco.bb.excecoes.TNRException;
@@ -7,16 +9,25 @@ import br.ufc.banco.conta.Conta;
 import br.ufc.banco.conta.ContaAbstrata;
 import br.ufc.banco.conta.ContaEspecial;
 import br.ufc.banco.conta.ContaPoupanca;
+import br.ufc.banco.dados.ArrayContas;
 import br.ufc.banco.dados.VectorContas;
 import br.ufc.banco.dados.excecoes.CEException;
 import br.ufc.banco.dados.excecoes.CIException;
 
+import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.io.xml.DomDriver;
+import com.thoughtworks.xstream.persistence.FilePersistenceStrategy;
+import com.thoughtworks.xstream.persistence.PersistenceStrategy;
+import com.thoughtworks.xstream.persistence.XmlArrayList;
+
 public class TAABB24H {
-
+	private static final String PATH_CONTAS = "/contas";
 	private static Scanner scanner = new Scanner(System.in);
-
+	static XStream xstream = new XStream(new DomDriver());
+	
+	
 	public static void main(String[] args) {
-		BancoBrasil banco = new BancoBrasil(new VectorContas());
+		BancoBrasil banco = new BancoBrasil(carregarContas(PATH_CONTAS));
 		boolean loop = true;
 		while (loop) {
 			switch (menu()) {
@@ -149,6 +160,7 @@ public class TAABB24H {
 				break;
 			}
 		}
+		salvarContas(PATH_CONTAS, banco.obterTodasContas());
 	}
 
 	private static int menu() {
@@ -183,5 +195,22 @@ public class TAABB24H {
 		System.out.print("Digite a opção desejada: ");
 		return scanner.nextInt();
 	}
-
+	
+	private static ArrayContas carregarContas(String path){
+		ArrayContas contas = new ArrayContas();
+		
+		return contas;
+	}
+	
+	private static void salvarContas(String path, ArrayContas contas){
+		xstream.alias("conta", ContaAbstrata.class);
+		PersistenceStrategy strategy = new FilePersistenceStrategy(new File(path),xstream);
+		List<ContaAbstrata> xmlContas = new XmlArrayList(strategy);
+		ContaAbstrata[] listaContas = contas.listar();
+		listaContas[0] = new Conta("123");
+		
+		for(ContaAbstrata conta : contas.listar()){
+			xmlContas.add(conta);
+		}
+	}
 }
