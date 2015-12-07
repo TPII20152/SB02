@@ -50,19 +50,18 @@ public class ContaDAO {
 	      //Connection connection = null;
 	        Statement stmt = null;
 	        
-	 
 	          try {
 				stmt = connection.createStatement();
 			
-	          String sql = "CREATE TABLE contas " +
+	          String sqlTables = "CREATE TABLE IF NOT EXISTS contas " +
 	                       "(numero INTEGER PRIMARY KEY ," +
 	                       " saldo  REAL NOT NULL, " + 
 	                       " tipo   INTEGER     NOT NULL) ";
-	          stmt.executeUpdate(sql);
+	          stmt.executeUpdate(sqlTables);
 	          stmt.close();
 	          stmt = connection.createStatement();
 				
-	          String sqlBonus = "CREATE TABLE bonus " +
+	          String sqlBonus = "CREATE TABLE IF NOT EXISTS bonus " +
 	                       "(numero INTEGER PRIMARY KEY ," +
 	                       " bonus  REAL NOT NULL0 "; 
 	          stmt.executeUpdate(sqlBonus);
@@ -71,7 +70,7 @@ public class ContaDAO {
 	          } catch (SQLException e) {
 					e.printStackTrace();
 				}
-	        System.out.println("TableS created successfully");
+	        System.out.println("Tables created successfully");
 	  }
 	   
 	  public void inserirConta(ContaAbstrata conta)
@@ -136,36 +135,18 @@ public class ContaDAO {
 	        return conta;
 	  }
 	   
-	  public void updateDB()
+	  public void atualizarConta(ContaAbstrata conta)
 	  {
-	    Connection c = null;
 	    Statement stmt = null;
 	    try {
-	      Class.forName("org.sqlite.JDBC");
-	      c = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	      c.setAutoCommit(false);
-	      System.out.println("Opened database successfully");
-	 
-	      stmt = c.createStatement();
-	      String sql = "UPDATE web_blog set message = 'This is updated by updateDB()' where ID=1;";
+	      stmt = connection.createStatement();
+	      //String values = "VALUES ("
+	      String sql = "UPDATE "+TABELA_CONTAS+" set saldo="+conta.obterSaldo() + " WHERE numero="+conta.obterNumero()+";";
 	      stmt.executeUpdate(sql);
-	      c.commit();
+	      connection.commit();
 	 
-	      ResultSet rs = stmt.executeQuery( "SELECT * FROM web_blog;" );
-	      while ( rs.next() ) {
-	         int id = rs.getInt("id");
-	         String  name = rs.getString("name");
-	         String  message = rs.getString("message");
-	         String date_added = rs.getString("date_added");
-	         /*System.out.println( "ID : " + id );
-	         System.out.println( "Name : " + name );
-	         System.out.println( "Message : " + message );
-	         System.out.println( "Date Added : " + date_added );*/
-	         System.out.println();
-	      }
-	      rs.close();
 	      stmt.close();
-	      c.close();
+	      connection.close();
 	    } catch ( Exception e ) {
 	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	      System.exit(0);
@@ -173,36 +154,25 @@ public class ContaDAO {
 	    System.out.println("Operation done successfully");
 	  }
 	   
-	  public void deleteDB()
+	  public void apagarConta(ContaAbstrata conta)
 	  {
-	      Connection c = null;
 	        Statement stmt = null;
 	        try {
-	          Class.forName("org.sqlite.JDBC");
-	          c = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          c.setAutoCommit(false);
-	          System.out.println("Opened database successfully");
-	 
-	          stmt = c.createStatement();
-	          String sql = "DELETE from web_blog where ID=1;";
+	          stmt = connection.createStatement();
+	          String sql = "DELETE from "+TABELA_CONTAS+" where numero="+conta.obterNumero()+";";
 	          stmt.executeUpdate(sql);
-	          c.commit();
-	 
-	          ResultSet rs = stmt.executeQuery( "SELECT * FROM web_blog;" );
-	          while ( rs.next() ) {
-	             int id = rs.getInt("id");
-	             String  name = rs.getString("name");
-	             String  message = rs.getString("message");
-	             String date_added = rs.getString("date_added");
-	             System.out.println( "ID : " + id );
-	             System.out.println( "Name : " + name );
-	             System.out.println( "Message : " + message );
-	             System.out.println( "Date Added : " + date_added );
-	             System.out.println();
-	          }
-	          rs.close();
+	          connection.commit();
 	          stmt.close();
-	          c.close();
+	          
+	          if(getTipo(conta)==2){
+	        	  stmt = connection.createStatement();
+		          String sqlBonus = "DELETE from "+TABELA_BONUS+" where numero="+conta.obterNumero()+";";
+		          stmt.executeUpdate(sqlBonus);
+		          connection.commit();
+		          stmt.close();
+	          }
+	          
+	          connection.close();
 	        } catch ( Exception e ) {
 	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	          System.exit(0);
