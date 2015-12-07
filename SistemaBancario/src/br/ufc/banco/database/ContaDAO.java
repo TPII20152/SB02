@@ -3,10 +3,20 @@ package br.ufc.banco.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
+import br.ufc.banco.conta.Conta;
+import br.ufc.banco.conta.ContaAbstrata;
+import br.ufc.banco.conta.ContaEspecial;
+import br.ufc.banco.conta.ContaImposto;
+import br.ufc.banco.conta.ContaPoupanca;
+
 public class ContaDAO {
-	private static Connection connection;
+	//private SQLiteConnection sqLiteConnection;
+	private Connection connection;
+	public static final String TABELA_CONTAS = "contas";
+	public static final String TABELA_BONUS = "bonus";
 	
 	public ContaDAO(Connection connection) {
 		super();
@@ -23,7 +33,7 @@ public class ContaDAO {
 	      //deleteDB();
 	  }*/
 	   
-	  public static void connectDB()
+	  public void connectDB()
 	  {
 	      //Connection c = null;
 	        /*try {
@@ -35,49 +45,53 @@ public class ContaDAO {
 	        }
 	        */System.out.println("Opened database successfully");
 	  }
-	  public static void createDB()
+	  public void createDB()
 	  {
 	      //Connection connection = null;
 	        Statement stmt = null;
-	        try {
-	          Class.forName("org.sqlite.JDBC");
-	          connection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          System.out.println("Opened database successfully");
+	        
 	 
-	          stmt = connection.createStatement();
-	          String sql = "CREATE TABLE web_blog " +
-	                       "(ID INTEGER PRIMARY KEY autoincrement," +
-	                       " NAME           CHAR(50)    NOT NULL, " + 
-	                       " message        TEXT     NOT NULL, " + 
-	                       " date_added     datetime)";
+	          try {
+				stmt = connection.createStatement();
+			
+	          String sql = "CREATE TABLE contas " +
+	                       "(numero INTEGER PRIMARY KEY ," +
+	                       " saldo  REAL NOT NULL, " + 
+	                       " tipo   INTEGER     NOT NULL) ";
 	          stmt.executeUpdate(sql);
+	          stmt.close();
+	          stmt = connection.createStatement();
+				
+	          String sqlBonus = "CREATE TABLE bonus " +
+	                       "(numero INTEGER PRIMARY KEY ," +
+	                       " bonus  REAL NOT NULL0 "; 
+	          stmt.executeUpdate(sqlBonus);
 	          stmt.close();
 	          connection.close();
-	        } catch ( Exception e ) {
-	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	          System.exit(0);
-	        }
-	        System.out.println("Table created successfully");
+	          } catch (SQLException e) {
+					e.printStackTrace();
+				}
+	        System.out.println("TableS created successfully");
 	  }
 	   
-	  public static void insertDB()
+	  public void inserirConta(ContaAbstrata conta)
 	  {
-	      Connection c = null;
+	      //Connection connnection = null;
+		    int tipo = getTipo(conta);
 	        Statement stmt = null;
 	        try {
-	          Class.forName("org.sqlite.JDBC");
-	          c = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          c.setAutoCommit(false);
-	          System.out.println("Opened database successfully");
-	 
-	          stmt = c.createStatement();
-	          String sql = "INSERT INTO web_blog (NAME,message,date_added) " +
-	                       "VALUES ('Ken', 'Hello every one!!!', datetime())," +
-	                       " ('Jim', 'whats up!!!',datetime());"; 
+	          /*Class.forName("org.sqlite.JDBC");
+	          connnection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
+	          connnection.setAutoCommit(false);
+	          System.out.println("Opened database successfully");*/
+	          String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterSaldo()+", "+tipo+");";
+	          stmt = connection.createStatement();
+	          String sql = "INSERT INTO "+  TABELA_CONTAS + "(numero,saldo,tipo) " + values;
+	                       
 	          stmt.executeUpdate(sql);
 	          stmt.close();
-	          c.commit();
-	          c.close();
+	          connection.commit();
+	          connection.close();
 	        } catch ( Exception e ) {
 	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	          System.exit(0);
@@ -85,40 +99,44 @@ public class ContaDAO {
 	        System.out.println("Records created successfully");
 	  }
 	   
-	  public static void selectDB()
+	  public ContaAbstrata buscarConta(int numero)
 	  {
-	        Connection c = null;
+	        ContaAbstrata conta = null;
 	        Statement stmt = null;
 	        try {
-	          Class.forName("org.sqlite.JDBC");
-	          c = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          c.setAutoCommit(false);
-	          System.out.println("Opened database successfully");
+	          /*Class.forName("org.sqlite.JDBC");
+	          connection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
+	          connection.setAutoCommit(false);
+	          System.out.println("Opened database successfully");*/
 	 
-	          stmt = c.createStatement();
-	          ResultSet rs = stmt.executeQuery( "SELECT * FROM web_blog;" );
-	          while ( rs.next() ) {
-	             int id = rs.getInt("id");
-	             String  name = rs.getString("name");
-	             String  message = rs.getString("message");
-	             String date_added = rs.getString("date_added");
-	             System.out.println( "ID : " + id );
+	          stmt = connection.createStatement();
+	          ResultSet rs = stmt.executeQuery( "SELECT * FROM "+TABELA_CONTAS+
+	        		  							"WHERE numero= "+ numero+";");
+	             rs.next();
+	             String num = rs.getString("numero");
+	             double  saldo = rs.getDouble("message");
+	             int tipo = rs.getInt("tipo");
+	             conta = criarConta(tipo, num);
+	             if(saldo >= 0) conta.creditar(saldo); 
+	             	else conta.debitar(saldo);
+	             /*System.out.println( "ID : " + id );
 	             System.out.println( "Name : " + name );
 	             System.out.println( "Message : " + message );
 	             System.out.println( "Date Added : " + date_added );
-	             System.out.println();
-	          }
+	             System.out.println();*/
+	          
 	          rs.close();
 	          stmt.close();
-	          c.close();
+	          connection.close();
 	        } catch ( Exception e ) {
 	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
 	          System.exit(0);
 	        }
-	        System.out.println("Operation done successfully");  
+	        System.out.println("Operation done successfully");
+	        return conta;
 	  }
 	   
-	  public static void updateDB()
+	  public void updateDB()
 	  {
 	    Connection c = null;
 	    Statement stmt = null;
@@ -139,10 +157,10 @@ public class ContaDAO {
 	         String  name = rs.getString("name");
 	         String  message = rs.getString("message");
 	         String date_added = rs.getString("date_added");
-	         System.out.println( "ID : " + id );
+	         /*System.out.println( "ID : " + id );
 	         System.out.println( "Name : " + name );
 	         System.out.println( "Message : " + message );
-	         System.out.println( "Date Added : " + date_added );
+	         System.out.println( "Date Added : " + date_added );*/
 	         System.out.println();
 	      }
 	      rs.close();
@@ -155,7 +173,7 @@ public class ContaDAO {
 	    System.out.println("Operation done successfully");
 	  }
 	   
-	  public static void deleteDB()
+	  public void deleteDB()
 	  {
 	      Connection c = null;
 	        Statement stmt = null;
@@ -190,5 +208,26 @@ public class ContaDAO {
 	          System.exit(0);
 	        }
 	        System.out.println("Operation done successfully");
+	  }
+	  public int getTipo(ContaAbstrata conta){
+		  if(conta instanceof Conta){
+			  return 1;
+		  } else if(conta instanceof ContaEspecial){
+			  return 2;
+		  }  else if(conta instanceof ContaPoupanca){
+			  return 3;
+		  }  else {
+			  return 4;
+		  }
+	  }
+	  public ContaAbstrata criarConta(int tipo, String num){
+		  
+		  switch(tipo){
+		  	case 1: return new Conta(num);
+		  	case 2: return new ContaEspecial(num);
+		  	case 3: return new ContaPoupanca(num);
+		  	case 4: return new ContaImposto(num);
+		  	default: return null;
+		  }
 	  }
 }
