@@ -1,10 +1,10 @@
-# target programming lamguage
+# target programming language
 language: java
 
-# JDK versios support
+# JDK versions support
 jdk:
   - oraclejdk7
   - oraclejdk8
 
 # run tests, findbugs, pmd and friends using Ant, Maven or Gradle
-script: ant test
+script: true
