@@ -1,4 +1,4 @@
-package br.ufc.banco.database;
+package br.ufc.banco.bb.util;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;

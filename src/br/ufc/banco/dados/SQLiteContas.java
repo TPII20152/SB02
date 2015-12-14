@@ -1,4 +1,4 @@
-package br.ufc.banco.database;
+package br.ufc.banco.dados;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -6,50 +6,25 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import br.ufc.banco.bb.util.SQLiteConnector;
 import br.ufc.banco.conta.Conta;
 import br.ufc.banco.conta.ContaAbstrata;
 import br.ufc.banco.conta.ContaEspecial;
 import br.ufc.banco.conta.ContaImposto;
 import br.ufc.banco.conta.ContaPoupanca;
-import br.ufc.banco.dados.IRepositorioContas;
 import br.ufc.banco.dados.excecoes.CEException;
 
 public class SQLiteContas implements IRepositorioContas{
-	//private SQLiteConnection sqLiteConnection;
 	private Connection connection;
 	public static final String TABELA_CONTAS = "contas";
 	public static final String TABELA_BONUS = "bonus";
 	
-	public SQLiteContas(/*Connection connection*/) {
+	public SQLiteContas() {
 		super();
-		//this.connection = connection;
 	}
 
-	/*public static void main( String args[] )
-	  {
-	      connectDB();
-	      createDB();
-	      insertDB();
-	      selectDB();
-	      //updateDB();
-	      //deleteDB();
-	  }*/
-	   
-	  public void connectDB()
-	  {
-	      //Connection c = null;
-	        /*try {
-	          Class.forName("org.sqlite.JDBC");
-	          connection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	        } catch ( Exception e ) {
-	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	          System.exit(0);
-	        }
-	        */System.out.println("Opened database successfully");
-	  }
 	  public void createDB()
 	  {
-	      //Connection connection = null;
 		    connection = SQLiteConnector.getConnection();
 	        Statement stmt = null;
 	        
@@ -77,16 +52,11 @@ public class SQLiteContas implements IRepositorioContas{
 	  }
 	   
 	  public void inserir(ContaAbstrata conta) throws CEException{
-	      //Connection connnection = null;
 		  if(procurar(conta.obterNumero()) == null){
 			  connection = SQLiteConnector.getConnection();
 			    int tipo = getTipo(conta);
 		        Statement stmt = null;
 		        try {
-		          /*Class.forName("org.sqlite.JDBC");
-		          connnection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-		          connnection.setAutoCommit(false);
-		          System.out.println("Opened database successfully");*/
 		          String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterSaldo()+", "+tipo+");";
 		          stmt = connection.createStatement();
 		          String sql = "INSERT INTO "+  TABELA_CONTAS + "(numero,saldo,tipo) " + values;
@@ -113,11 +83,6 @@ public class SQLiteContas implements IRepositorioContas{
 	        ContaAbstrata conta = null;
 	        Statement stmt = null;
 	        try {
-	          /*Class.forName("org.sqlite.JDBC");
-	          connection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          connection.setAutoCommit(false);
-	          System.out.println("Opened database successfully");*/
-	 
 	          stmt = connection.createStatement();
 	          ResultSet rs = stmt.executeQuery( "SELECT * FROM "+TABELA_CONTAS+
 	        		  							" WHERE numero = "+ numero+";");
@@ -129,14 +94,7 @@ public class SQLiteContas implements IRepositorioContas{
 		             conta = criarConta(tipo, num);
 		             if(saldo >= 0) conta.creditar(saldo); 
 		             	else conta.debitar(saldo);
-		             
 	             }
-	             /*System.out.println( "ID : " + id );
-	             System.out.println( "Name : " + name );
-	             System.out.println( "Message : " + message );
-	             System.out.println( "Date Added : " + date_added );
-	             System.out.println();*/
-	          
 	          rs.close();
 	          stmt.close();
 	          connection.close();
@@ -218,13 +176,56 @@ public class SQLiteContas implements IRepositorioContas{
 
 	@Override
 	public ContaAbstrata[] listar() {
-		// TODO Auto-generated method stub
-		return null;
+		int tamanho = numeroContas();
+		connection = SQLiteConnector.getConnection();
+        ContaAbstrata conta = null;
+        ContaAbstrata[] contas = new ContaAbstrata[tamanho];
+        Statement stmt = null;
+        if(tamanho != 0 ){
+        	try {
+                stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery( "SELECT * FROM "+TABELA_CONTAS+";");
+                int i = 0;   
+                while(rs.next()){
+                  	 String num = rs.getString("numero");
+      	             double  saldo = rs.getDouble("saldo");
+      	             int tipo = rs.getInt("tipo");
+      	             conta = criarConta(tipo, num);
+      	             if(saldo >= 0) conta.creditar(saldo); 
+      	             	else conta.debitar(saldo);
+      	             contas[i] = conta;
+      	             i++;
+                   }
+                rs.close();
+                stmt.close();
+                connection.close();
+              } catch ( Exception e ) {
+                System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+              }
+              System.out.println("Operation done successfully");
+        }
+		return contas;
 	}
 
 	@Override
 	public int numeroContas() {
-		// TODO Auto-generated method stub
-		return 0;
+		connection = SQLiteConnector.getConnection();
+        int quantidade = 0;
+        Statement stmt = null;
+        try {
+          stmt = connection.createStatement();
+          ResultSet rs = stmt.executeQuery( "SELECT COUNT(*) FROM "+TABELA_CONTAS+";");
+             
+          if(rs.next()){
+            	 quantidade = rs.getInt("count(*)");
+             }
+          rs.close();
+          stmt.close();
+          connection.close();
+        } catch ( Exception e ) {
+          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+        }
+        System.out.println("Operation done successfully");
+		return quantidade;
 	}
 }
