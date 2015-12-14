@@ -11,16 +11,18 @@ import br.ufc.banco.conta.ContaAbstrata;
 import br.ufc.banco.conta.ContaEspecial;
 import br.ufc.banco.conta.ContaImposto;
 import br.ufc.banco.conta.ContaPoupanca;
+import br.ufc.banco.dados.IRepositorioContas;
+import br.ufc.banco.dados.excecoes.CEException;
 
-public class ContaDAO {
+public class SQLiteContas implements IRepositorioContas{
 	//private SQLiteConnection sqLiteConnection;
 	private Connection connection;
 	public static final String TABELA_CONTAS = "contas";
 	public static final String TABELA_BONUS = "bonus";
 	
-	public ContaDAO(Connection connection) {
+	public SQLiteContas(/*Connection connection*/) {
 		super();
-		this.connection = connection;
+		//this.connection = connection;
 	}
 
 	/*public static void main( String args[] )
@@ -48,6 +50,7 @@ public class ContaDAO {
 	  public void createDB()
 	  {
 	      //Connection connection = null;
+		    connection = SQLiteConnector.getConnection();
 	        Statement stmt = null;
 	        
 	          try {
@@ -73,33 +76,40 @@ public class ContaDAO {
 	        System.out.println("Tables created successfully");
 	  }
 	   
-	  public void inserirConta(ContaAbstrata conta)
-	  {
+	  public void inserir(ContaAbstrata conta) throws CEException{
 	      //Connection connnection = null;
-		    int tipo = getTipo(conta);
-	        Statement stmt = null;
-	        try {
-	          /*Class.forName("org.sqlite.JDBC");
-	          connnection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
-	          connnection.setAutoCommit(false);
-	          System.out.println("Opened database successfully");*/
-	          String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterSaldo()+", "+tipo+");";
-	          stmt = connection.createStatement();
-	          String sql = "INSERT INTO "+  TABELA_CONTAS + "(numero,saldo,tipo) " + values;
-	                       
-	          stmt.executeUpdate(sql);
-	          stmt.close();
-	          connection.commit();
-	          connection.close();
-	        } catch ( Exception e ) {
-	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	          System.exit(0);
-	        }
-	        System.out.println("Records created successfully");
+		  if(procurar(conta.obterNumero()) == null){
+			  connection = SQLiteConnector.getConnection();
+			    int tipo = getTipo(conta);
+		        Statement stmt = null;
+		        try {
+		          /*Class.forName("org.sqlite.JDBC");
+		          connnection = DriverManager.getConnection("jdbc:sqlite:myBlog.sqlite");
+		          connnection.setAutoCommit(false);
+		          System.out.println("Opened database successfully");*/
+		          String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterSaldo()+", "+tipo+");";
+		          stmt = connection.createStatement();
+		          String sql = "INSERT INTO "+  TABELA_CONTAS + "(numero,saldo,tipo) " + values;
+		                       
+		          stmt.executeUpdate(sql);
+		          stmt.close();
+		          //connection.commit();
+		          connection.close();
+		        } catch ( Exception e ) {
+		          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+		          System.exit(0);
+		        }
+		        System.out.println("Records created successfully");
+		  } else {
+			  throw new CEException(conta.obterNumero());
+		  }
+		  
+		  
 	  }
 	   
-	  public ContaAbstrata buscarConta(int numero)
+	  public ContaAbstrata procurar(String numero)
 	  {
+		  	connection = SQLiteConnector.getConnection();
 	        ContaAbstrata conta = null;
 	        Statement stmt = null;
 	        try {
@@ -110,14 +120,17 @@ public class ContaDAO {
 	 
 	          stmt = connection.createStatement();
 	          ResultSet rs = stmt.executeQuery( "SELECT * FROM "+TABELA_CONTAS+
-	        		  							"WHERE numero= "+ numero+";");
-	             rs.next();
-	             String num = rs.getString("numero");
-	             double  saldo = rs.getDouble("message");
-	             int tipo = rs.getInt("tipo");
-	             conta = criarConta(tipo, num);
-	             if(saldo >= 0) conta.creditar(saldo); 
-	             	else conta.debitar(saldo);
+	        		  							" WHERE numero = "+ numero+";");
+	             
+	          if(rs.next()){
+	            	 String num = rs.getString("numero");
+		             double  saldo = rs.getDouble("saldo");
+		             int tipo = rs.getInt("tipo");
+		             conta = criarConta(tipo, num);
+		             if(saldo >= 0) conta.creditar(saldo); 
+		             	else conta.debitar(saldo);
+		             
+	             }
 	             /*System.out.println( "ID : " + id );
 	             System.out.println( "Name : " + name );
 	             System.out.println( "Message : " + message );
@@ -129,7 +142,7 @@ public class ContaDAO {
 	          connection.close();
 	        } catch ( Exception e ) {
 	          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-	          System.exit(0);
+	          //System.exit(0);
 	        }
 	        System.out.println("Operation done successfully");
 	        return conta;
@@ -137,6 +150,7 @@ public class ContaDAO {
 	   
 	  public void atualizarConta(ContaAbstrata conta)
 	  {
+		connection = SQLiteConnector.getConnection();  
 	    Statement stmt = null;
 	    try {
 	      stmt = connection.createStatement();
@@ -154,23 +168,24 @@ public class ContaDAO {
 	    System.out.println("Operation done successfully");
 	  }
 	   
-	  public void apagarConta(ContaAbstrata conta)
+	  public void apagar(String numero)
 	  {
+		    connection = SQLiteConnector.getConnection();
 	        Statement stmt = null;
 	        try {
 	          stmt = connection.createStatement();
-	          String sql = "DELETE from "+TABELA_CONTAS+" where numero="+conta.obterNumero()+";";
+	          String sql = "DELETE from "+TABELA_CONTAS+" where numero="+numero+";";
 	          stmt.executeUpdate(sql);
 	          connection.commit();
 	          stmt.close();
 	          
-	          if(getTipo(conta)==2){
+	          /*if(getTipo(conta)==2){
 	        	  stmt = connection.createStatement();
-		          String sqlBonus = "DELETE from "+TABELA_BONUS+" where numero="+conta.obterNumero()+";";
+		          String sqlBonus = "DELETE from "+TABELA_BONUS+" where numero="+numero+";";
 		          stmt.executeUpdate(sqlBonus);
 		          connection.commit();
 		          stmt.close();
-	          }
+	          }*/
 	          
 	          connection.close();
 	        } catch ( Exception e ) {
@@ -180,12 +195,12 @@ public class ContaDAO {
 	        System.out.println("Operation done successfully");
 	  }
 	  public int getTipo(ContaAbstrata conta){
-		  if(conta instanceof Conta){
-			  return 1;
-		  } else if(conta instanceof ContaEspecial){
+		  if(conta instanceof ContaEspecial){
 			  return 2;
-		  }  else if(conta instanceof ContaPoupanca){
+		  } else if(conta instanceof ContaPoupanca){
 			  return 3;
+		  }  else if(conta instanceof Conta){
+			  return 1;
 		  }  else {
 			  return 4;
 		  }
@@ -200,4 +215,16 @@ public class ContaDAO {
 		  	default: return null;
 		  }
 	  }
+
+	@Override
+	public ContaAbstrata[] listar() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int numeroContas() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

@@ -5,7 +5,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-public class SQLiteConnection {
+public class SQLiteConnector {
 	private static final String dbURL="jdbc:sqlite:contas.sqlite";
 	private static Connection connection;
     public static Connection getConnection() {
@@ -13,7 +13,7 @@ public class SQLiteConnection {
             Class.forName("org.sqlite.JDBC");
             //String dbURL = "jdbc:sqlite:product.db";
             connection = DriverManager.getConnection(dbURL);
-            if (connection != null) {
+            /*if (connection != null) {
                 System.out.println("Connected to the database");
                 DatabaseMetaData dm = (DatabaseMetaData) connection.getMetaData();
                 System.out.println("Driver name: " + dm.getDriverName());
@@ -22,7 +22,7 @@ public class SQLiteConnection {
                 System.out.println("Product version: " + dm.getDatabaseProductVersion());
                 connection.setAutoCommit(false);
                 //connection.close();
-            }
+            }*/
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
         } catch (SQLException ex) {
