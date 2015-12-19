@@ -24,7 +24,7 @@ public class ArrayContas implements IRepositorioContas {
 	}
 
 	public void inserir(ContaAbstrata conta) throws CEException {
-		if (this.procurar(conta.obterNumero()) != null) {
+		if (this.procurar(conta.obterNumero()) == null) {
 			this.contas.add(conta);
 		} else {
 			throw new CEException(conta.obterNumero());
