@@ -27,7 +27,7 @@ public class FormTransferencia extends JFrame {
 	public FormTransferencia() {
 		setType(Type.UTILITY);
 		setTitle("TRANSFER\u00CANCIA");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 233, 235);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -61,18 +61,19 @@ public class FormTransferencia extends JFrame {
 			gl_panel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_panel.createSequentialGroup()
 					.addContainerGap()
-					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING, false)
-						.addComponent(lblNmeroContaOrigem)
-						.addComponent(lblNmeroContaDestino, GroupLayout.PREFERRED_SIZE, 124, GroupLayout.PREFERRED_SIZE)
-						.addComponent(lblValorADepositar, GroupLayout.PREFERRED_SIZE, 124, GroupLayout.PREFERRED_SIZE)
-						.addGroup(gl_panel.createSequentialGroup()
-							.addComponent(btnNewButton)
-							.addPreferredGap(ComponentPlacement.RELATED)
-							.addComponent(btnTransferir))
-						.addComponent(txtDeposito)
-						.addComponent(txtNumContaDestino)
-						.addComponent(txtNumContaOrigem))
-					.addContainerGap(228, Short.MAX_VALUE))
+					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+						.addComponent(txtDeposito, GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
+						.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+							.addComponent(lblNmeroContaOrigem)
+							.addComponent(lblNmeroContaDestino, GroupLayout.PREFERRED_SIZE, 124, GroupLayout.PREFERRED_SIZE)
+							.addComponent(lblValorADepositar, GroupLayout.PREFERRED_SIZE, 124, GroupLayout.PREFERRED_SIZE)
+							.addGroup(gl_panel.createSequentialGroup()
+								.addComponent(btnNewButton)
+								.addPreferredGap(ComponentPlacement.RELATED)
+								.addComponent(btnTransferir, GroupLayout.DEFAULT_SIZE, 96, Short.MAX_VALUE))
+							.addComponent(txtNumContaOrigem)
+							.addComponent(txtNumContaDestino)))
+					.addContainerGap())
 		);
 		gl_panel.setVerticalGroup(
 			gl_panel.createParallelGroup(Alignment.LEADING)
@@ -93,7 +94,7 @@ public class FormTransferencia extends JFrame {
 					.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnNewButton)
 						.addComponent(btnTransferir))
-					.addContainerGap(79, Short.MAX_VALUE))
+					.addContainerGap(14, Short.MAX_VALUE))
 		);
 		panel.setLayout(gl_panel);
 	}

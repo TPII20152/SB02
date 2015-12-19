@@ -17,22 +17,6 @@ public class FormRenderJuros extends JFrame {
 	private JTextField txtNumConta;
 
 	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					FormRenderJuros frame = new FormRenderJuros();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
-	/**
 	 * Create the frame.
 	 */
 	public FormRenderJuros() {

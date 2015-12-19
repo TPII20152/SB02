@@ -25,7 +25,7 @@ public class FormSaque extends JFrame {
 	public FormSaque() {
 		setType(Type.UTILITY);
 		setTitle("SAQUE");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setBounds(100, 100, 232, 189);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
