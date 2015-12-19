@@ -22,10 +22,10 @@ public class ContaEspecial extends Conta {
 		bonus = bonus + (valor * 0.01);
 		super.creditar(valor);
 	}
-	public void setBonus(int valor){
+	public void setBonus(double valor){
 		bonus = valor;
 	}
-	public void setSaldo(int valor){
+	public void setSaldo(double valor){
 		saldo = valor;
 	}
 }
