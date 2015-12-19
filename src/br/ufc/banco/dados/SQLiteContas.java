@@ -1,7 +1,6 @@
 package br.ufc.banco.dados;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,6 +12,7 @@ import br.ufc.banco.conta.ContaEspecial;
 import br.ufc.banco.conta.ContaImposto;
 import br.ufc.banco.conta.ContaPoupanca;
 import br.ufc.banco.dados.excecoes.CEException;
+import br.ufc.banco.dados.excecoes.CIException;
 
 public class SQLiteContas implements IRepositorioContas{
 	private Connection connection;
@@ -41,7 +41,7 @@ public class SQLiteContas implements IRepositorioContas{
 				
 	          String sqlBonus = "CREATE TABLE IF NOT EXISTS bonus " +
 	                       "(numero INTEGER PRIMARY KEY ," +
-	                       " bonus  REAL NOT NULL0 "; 
+	                       " bonus  REAL NOT NULL) "; 
 	          stmt.executeUpdate(sqlBonus);
 	          stmt.close();
 	          connection.close();
@@ -51,7 +51,7 @@ public class SQLiteContas implements IRepositorioContas{
 	        System.out.println("Tables created successfully");
 	  }
 	   
-	  public void inserir(ContaAbstrata conta) throws CEException{
+	  public void inserir(ContaAbstrata conta) throws CEException {
 		  if(procurar(conta.obterNumero()) == null){
 			  connection = SQLiteConnector.getConnection();
 			    int tipo = getTipo(conta);
@@ -60,10 +60,11 @@ public class SQLiteContas implements IRepositorioContas{
 		          String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterSaldo()+", "+tipo+");";
 		          stmt = connection.createStatement();
 		          String sql = "INSERT INTO "+  TABELA_CONTAS + "(numero,saldo,tipo) " + values;
-		                       
+		          if(getTipo(conta)==2){
+			    	  inserirBonus((ContaEspecial) conta);
+			      }             
 		          stmt.executeUpdate(sql);
 		          stmt.close();
-		          //connection.commit();
 		          connection.close();
 		        } catch ( Exception e ) {
 		          System.err.println( e.getClass().getName() + ": " + e.getMessage() );
@@ -73,8 +74,6 @@ public class SQLiteContas implements IRepositorioContas{
 		  } else {
 			  throw new CEException(conta.obterNumero());
 		  }
-		  
-		  
 	  }
 	   
 	  public ContaAbstrata procurar(String numero)
@@ -91,9 +90,23 @@ public class SQLiteContas implements IRepositorioContas{
 	            	 String num = rs.getString("numero");
 		             double  saldo = rs.getDouble("saldo");
 		             int tipo = rs.getInt("tipo");
-		             conta = criarConta(tipo, num);
-		             if(saldo >= 0) conta.creditar(saldo); 
-		             	else conta.debitar(saldo);
+		             if(tipo == 2){
+		            	 Statement stmtBonus = connection.createStatement();
+		            	 ResultSet rsBonus = stmt.executeQuery( "SELECT bonus FROM "+TABELA_BONUS+
+		  							" WHERE numero = "+ numero+";");
+		            	 if(rsBonus.next()){
+		            		 double bonus = rs.getDouble("bonus");
+		            		 conta = criarContaEspecial(num, bonus);
+				             if(saldo >= 0) conta.creditar(saldo); 
+				             	else conta.debitar(saldo);
+				             }
+		            	 rsBonus.close();
+		            	 stmtBonus.close();	 
+		             } else{
+		            	 conta = criarConta(tipo, num);
+			             if(saldo >= 0) conta.creditar(saldo); 
+			             	else conta.debitar(saldo);
+			             }
 	             }
 	          rs.close();
 	          stmt.close();
@@ -105,7 +118,26 @@ public class SQLiteContas implements IRepositorioContas{
 	        System.out.println("Operation done successfully");
 	        return conta;
 	  }
-	   
+	  
+	  public void inserirBonus(ContaEspecial conta)
+	  {
+	    try {
+	      connection = SQLiteConnector.getConnection();  
+	      Statement stmt = connection.createStatement();
+	      String values = "VALUES ("+conta.obterNumero() + ", "+ conta.obterBonus()+");";
+          stmt = connection.createStatement();
+          String sql = "INSERT INTO "+  TABELA_BONUS + " (numero,bonus) " + values;
+	      //connection.commit();
+          stmt.executeUpdate(sql);
+	      stmt.close();
+	      connection.close();
+	    } catch ( Exception e ) {
+	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      System.exit(0);
+	    }
+	    System.out.println("Operation done successfully");
+	  }
+	  
 	  public void atualizarConta(ContaAbstrata conta)
 	  {
 		connection = SQLiteConnector.getConnection();  
@@ -115,7 +147,29 @@ public class SQLiteContas implements IRepositorioContas{
 	      //String values = "VALUES ("
 	      String sql = "UPDATE "+TABELA_CONTAS+" set saldo="+conta.obterSaldo() + " WHERE numero="+conta.obterNumero()+";";
 	      stmt.executeUpdate(sql);
-	      connection.commit();
+	      //connection.commit();
+	      if(getTipo(conta)==2){
+	    	  atualizarBonus((ContaEspecial) conta);
+	      }
+	      stmt.close();
+	      connection.close();
+	    } catch ( Exception e ) {
+	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      System.exit(0);
+	    }
+	    System.out.println("Operation done successfully");
+	  }
+	  
+	  public void atualizarBonus(ContaEspecial conta)
+	  {
+	    try {
+	      connection = SQLiteConnector.getConnection();  
+		  Statement stmt = null;  
+	      stmt = connection.createStatement();
+	      //String values = "VALUES ("
+	      String sql = "UPDATE "+TABELA_BONUS+" set bonus="+conta.obterBonus() + " WHERE numero="+conta.obterNumero()+";";
+	      stmt.executeUpdate(sql);
+	      //connection.commit();
 	 
 	      stmt.close();
 	      connection.close();
@@ -125,9 +179,11 @@ public class SQLiteContas implements IRepositorioContas{
 	    }
 	    System.out.println("Operation done successfully");
 	  }
-	   
-	  public void apagar(String numero)
+	  
+	  public void apagar(String numero) throws CIException
 	  {
+		  ContaAbstrata conta = procurar(numero);
+		  if(conta != null){
 		    connection = SQLiteConnector.getConnection();
 	        Statement stmt = null;
 	        try {
@@ -137,13 +193,13 @@ public class SQLiteContas implements IRepositorioContas{
 	          connection.commit();
 	          stmt.close();
 	          
-	          /*if(getTipo(conta)==2){
+	          if(getTipo(conta)==2){
 	        	  stmt = connection.createStatement();
 		          String sqlBonus = "DELETE from "+TABELA_BONUS+" where numero="+numero+";";
 		          stmt.executeUpdate(sqlBonus);
 		          connection.commit();
 		          stmt.close();
-	          }*/
+	          }
 	          
 	          connection.close();
 	        } catch ( Exception e ) {
@@ -151,6 +207,7 @@ public class SQLiteContas implements IRepositorioContas{
 	          System.exit(0);
 	        }
 	        System.out.println("Operation done successfully");
+		  } else throw new CIException(numero);
 	  }
 	  public int getTipo(ContaAbstrata conta){
 		  if(conta instanceof ContaEspecial){
@@ -173,15 +230,22 @@ public class SQLiteContas implements IRepositorioContas{
 		  	default: return null;
 		  }
 	  }
+	  
+public ContaEspecial criarContaEspecial(String num,double bonus){
+		  
+		  ContaEspecial contaEspecial = new ContaEspecial(num);
+		  contaEspecial.setBonus(bonus);
+		  return contaEspecial;
+	  }
 
 	@Override
 	public ContaAbstrata[] listar() {
 		int tamanho = numeroContas();
-		connection = SQLiteConnector.getConnection();
         ContaAbstrata conta = null;
         ContaAbstrata[] contas = new ContaAbstrata[tamanho];
         Statement stmt = null;
         if(tamanho != 0 ){
+        	connection = SQLiteConnector.getConnection();
         	try {
                 stmt = connection.createStatement();
                 ResultSet rs = stmt.executeQuery( "SELECT * FROM "+TABELA_CONTAS+";");
