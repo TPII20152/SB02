@@ -6,6 +6,15 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import br.ufc.banco.conta.Conta;
+import br.ufc.banco.conta.ContaAbstrata;
+import br.ufc.banco.conta.ContaEspecial;
+import br.ufc.banco.conta.ContaImposto;
+import br.ufc.banco.conta.ContaPoupanca;
+import br.ufc.banco.dados.SQLiteContas;
+
+import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
@@ -15,16 +24,20 @@ import java.awt.Font;
 import java.awt.Window.Type;
 import javax.swing.JTextField;
 import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class FormCadastro extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField txtNumConta;
+	private SQLiteContas database;
 
 	/**
 	 * Create the frame.
 	 */
 	public FormCadastro() {
+		database = new SQLiteContas();
 		setType(Type.UTILITY);
 		setTitle("CADASTRO");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -41,43 +54,41 @@ public class FormCadastro extends JFrame {
 		JLabel lblNewLabel = new JLabel("TIPO DE CONTA");
 		lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
 		
-		JRadioButton rdbtnEspecial = new JRadioButton("ESPECIAL");
+		final JRadioButton rdbtnEspecial = new JRadioButton("ESPECIAL");
 		
-		JRadioButton rdbtnImposto = new JRadioButton("IMPOSTO");
+		final JRadioButton rdbtnImposto = new JRadioButton("IMPOSTO");
 		
-		JRadioButton rdbtnComum = new JRadioButton("COMUM");
+		final JRadioButton rdbtnComum = new JRadioButton("COMUM");
+		rdbtnComum.setSelected(true);
 		
-		JRadioButton rdbtnPoupanca = new JRadioButton("POUPAN\u00C7A");
+		final JRadioButton rdbtnPoupanca = new JRadioButton("POUPAN\u00C7A");
 		GroupLayout gl_panel = new GroupLayout(panel);
 		gl_panel.setHorizontalGroup(
 			gl_panel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_panel.createSequentialGroup()
-					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-						.addGroup(gl_panel.createSequentialGroup()
-							.addContainerGap()
-							.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-								.addComponent(rdbtnEspecial)
-								.addComponent(rdbtnComum))
-							.addPreferredGap(ComponentPlacement.UNRELATED)
-							.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-								.addComponent(rdbtnPoupanca)
-								.addComponent(rdbtnImposto)))
-						.addGroup(gl_panel.createSequentialGroup()
-							.addGap(40)
-							.addComponent(lblNewLabel)))
-					.addContainerGap(72, Short.MAX_VALUE))
+					.addGap(40)
+					.addComponent(lblNewLabel))
+				.addGroup(gl_panel.createSequentialGroup()
+					.addGap(6)
+					.addComponent(rdbtnComum)
+					.addGap(12)
+					.addComponent(rdbtnPoupanca))
+				.addGroup(gl_panel.createSequentialGroup()
+					.addGap(6)
+					.addComponent(rdbtnEspecial)
+					.addGap(2)
+					.addComponent(rdbtnImposto))
 		);
 		gl_panel.setVerticalGroup(
-			gl_panel.createParallelGroup(Alignment.TRAILING)
+			gl_panel.createParallelGroup(Alignment.LEADING)
 				.addGroup(gl_panel.createSequentialGroup()
 					.addGap(4)
 					.addComponent(lblNewLabel)
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
+					.addGap(2)
+					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
 						.addComponent(rdbtnComum)
 						.addComponent(rdbtnPoupanca))
-					.addPreferredGap(ComponentPlacement.RELATED)
-					.addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
+					.addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
 						.addComponent(rdbtnEspecial)
 						.addComponent(rdbtnImposto)))
 		);
@@ -92,9 +103,37 @@ public class FormCadastro extends JFrame {
 		txtNumConta = new JTextField();
 		txtNumConta.setColumns(10);
 		
-		JButton btnCancelar = new JButton("CANCELAR");
+		JButton btnCancelar = new JButton("Cancelar");
+		btnCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		
-		JButton btnPesquisar = new JButton("PESQUISAR");
+		JButton btnCadastrar = new JButton("Cadastrar");
+		btnCadastrar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try{
+					ContaAbstrata conta;
+					if(rdbtnComum.isSelected()){
+						conta = new Conta(txtNumConta.getText());
+					}
+					else if(rdbtnEspecial.isSelected()){
+						conta = new ContaEspecial(txtNumConta.getText());
+					}
+					else if(rdbtnImposto.isSelected()){
+						conta = new ContaImposto(txtNumConta.getText());
+					}
+					else{
+						conta = new ContaPoupanca(txtNumConta.getText());
+					}
+					database.inserir(conta);
+				}
+				catch(Exception ex){
+					ex.printStackTrace();
+				}
+			}
+		});
 		GroupLayout gl_panel_1 = new GroupLayout(panel_1);
 		gl_panel_1.setHorizontalGroup(
 			gl_panel_1.createParallelGroup(Alignment.LEADING)
@@ -106,7 +145,7 @@ public class FormCadastro extends JFrame {
 						.addGroup(gl_panel_1.createSequentialGroup()
 							.addComponent(btnCancelar)
 							.addPreferredGap(ComponentPlacement.RELATED, 16, Short.MAX_VALUE)
-							.addComponent(btnPesquisar)))
+							.addComponent(btnCadastrar)))
 					.addContainerGap())
 		);
 		gl_panel_1.setVerticalGroup(
@@ -119,10 +158,17 @@ public class FormCadastro extends JFrame {
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addGroup(gl_panel_1.createParallelGroup(Alignment.BASELINE)
 						.addComponent(btnCancelar)
-						.addComponent(btnPesquisar))
+						.addComponent(btnCadastrar))
 					.addContainerGap(105, Short.MAX_VALUE))
 		);
 		panel_1.setLayout(gl_panel_1);
+		
+		ButtonGroup bg = new ButtonGroup();
+		bg.add(rdbtnComum);
+		bg.add(rdbtnEspecial);
+		bg.add(rdbtnImposto);
+		bg.add(rdbtnPoupanca);
+		
 	}
 
 }

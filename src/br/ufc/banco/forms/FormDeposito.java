@@ -6,6 +6,9 @@ import java.awt.EventQueue;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import br.ufc.banco.dados.SQLiteContas;
+
 import java.awt.Window.Type;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -13,16 +16,20 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 public class FormDeposito extends JFrame {
 
 	private JPanel contentPane;
 	private JTextField txtNumConta;
 	private JTextField txtDeposito;
+	private SQLiteContas database;
 	/**
 	 * Create the frame.
 	 */
 	public FormDeposito() {
+		database = new SQLiteContas();
 		setType(Type.UTILITY);
 		setTitle("DEP\u00D3SITO");
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -47,8 +54,18 @@ public class FormDeposito extends JFrame {
 		txtDeposito.setColumns(10);
 		
 		JButton btnCancelar = new JButton("CANCELAR");
+		btnCancelar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				dispose();
+			}
+		});
 		
 		JButton btnDepositar = new JButton("DEPOSITAR");
+		btnDepositar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 		GroupLayout gl_panel = new GroupLayout(panel);
 		gl_panel.setHorizontalGroup(
 			gl_panel.createParallelGroup(Alignment.LEADING)
