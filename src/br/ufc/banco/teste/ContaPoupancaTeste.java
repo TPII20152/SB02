@@ -6,6 +6,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import br.ufc.banco.bb.excecoes.TNRException;
 import br.ufc.banco.conta.ContaPoupanca;
 
 public class ContaPoupancaTeste extends TestCase{
@@ -24,15 +25,23 @@ public class ContaPoupancaTeste extends TestCase{
 	public void testRendeJuros() {
 		double saldo = poupanca.obterSaldo();
 		double taxa = 0.02;
-		poupanca.rendeJuros(taxa);
+		try {
+			poupanca.rendeJuros(taxa);
+		} catch (TNRException e) {
+			System.out.println(e.getMessage());
+		}
 		assertEquals(saldo*(1+taxa), poupanca.obterSaldo());
 	}
 
-	@Test
+	@Test(expected = TNRException.class)
 	public void testRendeJurosTaxaNegativa() {
 		double saldo = poupanca.obterSaldo();
 		double taxa = -0.02;
-		poupanca.rendeJuros(taxa);
+		try {
+			poupanca.rendeJuros(taxa);
+		} catch (TNRException e) {
+			System.out.println(e.getMessage());
+		}
 		assertEquals(saldo, poupanca.obterSaldo());
 	}
 }

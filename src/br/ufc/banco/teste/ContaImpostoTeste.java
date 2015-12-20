@@ -4,7 +4,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import br.ufc.banco.bb.excecoes.TNRException;
 import br.ufc.banco.conta.ContaImposto;
+import br.ufc.banco.conta.excecoes.SIException;
 import junit.framework.TestCase;
 
 public class ContaImpostoTeste extends TestCase{
@@ -20,7 +22,7 @@ public class ContaImpostoTeste extends TestCase{
 	}
 
 	@Test
-	public void testDebitar() {
+	public void testDebitar() throws TNRException, SIException {
 		double saldo = cpmf.obterSaldo();
 		double valor = 500.0;
 		cpmf.debitar(valor);
@@ -31,7 +33,11 @@ public class ContaImpostoTeste extends TestCase{
 	public void testDebitarNegativo() {
 		double saldo = cpmf.obterSaldo();
 		double valor = -500.0;
-		cpmf.debitar(valor);
+		try {
+			cpmf.debitar(valor);
+		} catch (TNRException | SIException e) {
+			System.out.println(e.getMessage());
+		}
 		assertEquals(saldo, cpmf.obterSaldo(), 0.000001);
 	}
 }
