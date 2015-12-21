@@ -190,14 +190,14 @@ public class SQLiteContas implements IRepositorioContas{
 	          stmt = connection.createStatement();
 	          String sql = "DELETE from "+TABELA_CONTAS+" where numero="+numero+";";
 	          stmt.executeUpdate(sql);
-	          connection.commit();
+	          //connection.commit();
 	          stmt.close();
 	          
 	          if(getTipo(conta)==2){
 	        	  stmt = connection.createStatement();
 		          String sqlBonus = "DELETE from "+TABELA_BONUS+" where numero="+numero+";";
 		          stmt.executeUpdate(sqlBonus);
-		          connection.commit();
+		          //connection.commit();
 		          stmt.close();
 	          }
 	          
