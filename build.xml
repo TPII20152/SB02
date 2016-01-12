@@ -37,7 +37,7 @@
 
     <target name="test" depends="clean,compile">
 		<mkdir dir="${reportDir}" />
-		<javac includeantruntime="yes" srcdir="${testDir}" destdir="${classesDir}">
+		<javac includeantruntime="yes" srcdir="${testDir}" destdir="${dir.classes}">
 			<classpath refid="buildClasspath" />
 		</javac>
 
